@@ -39,6 +39,8 @@ var albums = []album{
 func main() {
     router := gin.Default()
     router.GET("/albums", getAlbums)
+    // the colon preceding an item in the path signifies that the item is a path parameter
+    router.GET("/albums/:id", getAlbumByID)
     router.POST("/albums", postAlbums)
 
     router.Run("localhost:8080")
@@ -73,4 +75,21 @@ func postAlbums(c *gin.Context) {
     // Add the new album to the slice.
     albums = append(albums, newAlbum)
     c.IndentedJSON(http.StatusCreated, newAlbum)
+}
+
+// getAlbumByID locates the album whose ID value matches the id
+// parameter sent by the client, then returns that album as a response.
+// Context.Param retrieves the id path parameter from the URL.
+func getAlbumByID(c *gin.Context) {
+    id := c.Param("id")
+
+    // Loop over the list of albums, looking for
+    // an album whose ID value matches the parameter.
+    for _, a := range albums {
+        if a.ID == id {
+            c.IndentedJSON(http.StatusOK, a)
+            return
+        }
+    }
+    c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
 }
