@@ -33,3 +33,9 @@ curl http://localhost:8080/albums \
 ```sh
 curl http://localhost:8080/albums/2
 ```
+
+## Next
+
+1. Tie it to a Single-file Cross-platform Database (SQLite)
+2. Tie it to a RDBMS
+3. Deploy it
