@@ -1,4 +1,5 @@
 package main
+
 // A standalone program (as opposed to a library) is always in package main
 import (
     "net/http"
@@ -38,6 +39,7 @@ var albums = []album{
 func main() {
     router := gin.Default()
     router.GET("/albums", getAlbums)
+    router.POST("/albums", postAlbums)
 
     router.Run("localhost:8080")
 }
@@ -53,4 +55,22 @@ func main() {
 // In practice, the indented form is much easier to work with when debugging and the size difference is usually small.
 func getAlbums(c *gin.Context) {
     c.IndentedJSON(http.StatusOK, albums)
+}
+
+// Go doesn’t enforce the order in which you declare functions.
+// postAlbums adds an album from JSON received in the request body.
+// Context.BindJSON used to bind the request body to newAlbum.
+// Append the album struct initialized from the JSON to the albums slice
+func postAlbums(c *gin.Context) {
+    var newAlbum album
+
+    // Call BindJSON to bind the received JSON to
+    // newAlbum.
+    if err := c.BindJSON(&newAlbum); err != nil {
+        return
+    }
+
+    // Add the new album to the slice.
+    albums = append(albums, newAlbum)
+    c.IndentedJSON(http.StatusCreated, newAlbum)
 }
