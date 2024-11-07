@@ -11,6 +11,7 @@ MORE:
 - <https://pkg.go.dev/github.com/gin-gonic/gin>
 - <https://gin-gonic.com/docs/>
 - <https://docs.docker.com/guides/golang/build-images/>
+- <https://www.koyeb.com/docs/deploy/go>
 
 ```sh
 go get .
@@ -38,6 +39,6 @@ curl http://localhost:8080/albums/2
 
 ## Next
 
-1. Tie it to a Single-file Cross-platform Database (SQLite)
-2. Tie it to a RDBMS
-3. Deploy it
+1. Tie it to a Single-file Cross-platform Database (SQLite) - branch `sqlite`
+2. Tie it to a RDBMS - branch `postgres`
+3. Deploy it * (Docker container is failing) |
