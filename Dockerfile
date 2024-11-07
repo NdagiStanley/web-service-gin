@@ -14,7 +14,7 @@ RUN go mod download
 COPY *.go ./
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux go build -o binary_web_service .
+RUN GOOS=linux go build -o binary_web_service .
 
 # Optional:
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.
