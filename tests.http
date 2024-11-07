@@ -1,0 +1,18 @@
+###
+
+GET http://127.0.0.1:8080/albums
+
+###
+
+GET http://127.0.0.1:8080/albums/2
+
+###
+
+POST http://127.0.0.1:8080/albums
+Content-Type: application/json
+
+{
+  "title": "The Modern Sound of Betty Carter",
+  "artist": "Betty Carter",
+  "price": 49.99
+}
