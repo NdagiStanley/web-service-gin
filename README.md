@@ -20,13 +20,13 @@ go get .
 
 ## SQLITE
 
-1. Create `foo.db` file (If you prefer another name, edit `line 49` in `main.go`)
-2. Run `sqlite3 foo.db` (OR `sqlite3 <>` where `<>` stands for the sqlite file you used.)
+1. Create a postgres server
+2. Connect to the postgres server
 3. Run the following SQL to create the table:
 
     ```sql
     CREATE TABLE albums (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         title VARCHAR(255),
         artist VARCHAR(64),
         created DATE DEFAULT (CURRENT_DATE),
@@ -34,11 +34,13 @@ go get .
     );
     ```
 
-4. Run `.quit`
-
-For steps 2, 3 and 4, you can alternatively use a Database GUI tool like [TablePlus][tableplus] for creating the table, and inserting and viewing data.
+For steps 1, locally you can use Docker or Postgres app. For step 2 and 3, you can use the CLI, or alternatively, a Database GUI tool like [TablePlus][tableplus] for creating the table, and inserting and viewing data.
 
 ## Run application
+
+```sh
+export DATABASE_URL="postgres://postgres:postgres@localhost:5432/test"
+```
 
 ```sh
 go run .
@@ -60,12 +62,9 @@ curl http://localhost:8080/albums \
     --data '{"title": "The Modern Sound of Betty Carter","artist": "Betty Carter","price": 49.99}'
 ```
 
-The DB `bar.db` has the complete data as would be committed after running the above commands.
-
 ## Next
 
-1. Tie it to a RDBMS
-2. Deploy it
+1. Deploy it
 
 [tableplus]: https://tableplus.com/
 [effective_go]: https://go.dev/doc/effective_go

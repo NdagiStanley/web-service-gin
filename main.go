@@ -6,9 +6,10 @@ import (
 
     "github.com/gin-gonic/gin"
 
-    "database/sql"
     "log"
-    _ "github.com/mattn/go-sqlite3"
+    "os"
+    "context"
+    "github.com/jackc/pgx/v5"
 )
 
 // Steps
@@ -24,7 +25,7 @@ import (
 // Struct tags (json:"artist") specify what a field’s name should be when the struct’s contents are serialized into JSON
 
 // Define global database variable
-var db *sql.DB
+var db *pgx.Conn
 
 type album struct {
     ID     int     `json:"id"`
@@ -44,19 +45,15 @@ var seedAlbums = []album{
 // Initialize a Gin router using Default
 // Note: getAlbums NOT getAlbums() | function name not function result
 // Run function to attach the router to an http.Server and start the server.
+// Use fmt.Sprintf with sslmode=disable for local connections. In production, enable SSL
 func main() {
+    // urlExample := "postgres://username:password@localhost:5432/database_name"
     var err error
-    db, err = sql.Open("sqlite3", "./foo.db")
+    db, err = pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
     if err != nil {
-        log.Fatalf("Failed to open database: %v", err)
+        log.Fatalf("Unable to connect to database: %v", err)
     }
-    defer db.Close()
-
-    // Ensure the database connection is active
-    err = db.Ping()
-    if err != nil {
-        log.Fatalf("Failed to connect to the database: %v", err)
-    }
+    defer db.Close(context.Background())
 
     // Seed data into the database
     seedData()
@@ -75,21 +72,15 @@ func main() {
 func seedData() {
     // Check if the table is empty before seeding
     var count int
-    err := db.QueryRow("SELECT COUNT(*) FROM albums").Scan(&count)
+    err := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM albums").Scan(&count)
     if err != nil {
         log.Fatalf("Failed to check albums count: %v", err)
     }
 
     if count == 0 {
         log.Println("Seeding initial data into the albums table...")
-        stmt, err := db.Prepare("INSERT INTO albums (title, artist, price) VALUES (?, ?, ?)")
-        if err != nil {
-            log.Fatalf("Failed to prepare seed insert statement: %v", err)
-        }
-        defer stmt.Close()
-
         for _, a := range seedAlbums {
-            _, err = stmt.Exec(a.Title, a.Artist, a.Price)
+            _, err := db.Exec(context.Background(), "INSERT INTO albums (title, artist, price) VALUES ($1, $2, $3)", a.Title, a.Artist, a.Price)
             if err != nil {
                 log.Fatalf("Failed to insert album %v: %v", a, err)
             }
@@ -111,7 +102,7 @@ func seedData() {
 // In practice, the indented form is much easier to work with when debugging and the size difference is usually small.
 func getAlbums(c *gin.Context) {
     // Retrieve all albums from the database
-    rows, err := db.Query("SELECT id, title, artist, price FROM albums")
+    rows, err := db.Query(context.Background(), "SELECT id, title, artist, price FROM albums")
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query albums"})
         return
@@ -144,30 +135,13 @@ func postAlbums(c *gin.Context) {
         return
     }
 
-    // Prepare the SQL statement for inserting a new album.
-    stmt, err := db.Prepare("INSERT INTO albums(title, artist, price) VALUES (?, ?, ?)")
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare query"})
-        return
-    }
-    defer stmt.Close()
-
     // Execute the statement with newAlbum's data.
-    result, err := stmt.Exec(newAlbum.Title, newAlbum.Artist, newAlbum.Price)
+    err := db.QueryRow(context.Background(), "INSERT INTO albums (title, artist, price) VALUES ($1, $2, $3) RETURNING id", newAlbum.Title, newAlbum.Artist, newAlbum.Price).Scan(&newAlbum.ID)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert album"})
         return
     }
 
-    // Retrieve the ID of the new record.
-    id, err := result.LastInsertId()
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve new album ID"})
-        return
-    }
-
-    // Set the ID of newAlbum and return the created album.
-    newAlbum.ID = int(id)
     c.JSON(http.StatusCreated, newAlbum)
 }
 
@@ -180,9 +154,11 @@ func getAlbumByID(c *gin.Context) {
     // Loop over the list of albums, looking for
     // an album whose ID value matches the parameter.
     var a album
-    err := db.QueryRow("SELECT id, title, artist, price FROM albums WHERE id = ?", id).
+    err := db.QueryRow(context.Background(), "SELECT id, title, artist, price FROM albums WHERE id = $1", id).
         Scan(&a.ID, &a.Title, &a.Artist, &a.Price)
-    if err == sql.ErrNoRows {
+
+    // pgx returns pgx.ErrNoRows for no-result queries
+    if err == pgx.ErrNoRows {
         c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
         return
     } else if err != nil {
