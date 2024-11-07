@@ -36,7 +36,7 @@ go get .
 
 4. Run `.quit`
 
-For steps 2 and 3, you can alternatively use a Database GUI tool like [TablePlus][tableplus] for creating the table, and inserting and viewing data.
+For steps 2, 3 and 4, you can alternatively use a Database GUI tool like [TablePlus][tableplus] for creating the table, and inserting and viewing data.
 
 ## Run application
 
