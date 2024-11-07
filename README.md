@@ -4,11 +4,13 @@ REF:
 <https://go.dev/doc/tutorial/web-service-gin>
 
 MORE:
+
 - <https://go.dev/doc/effective_go>
 - <https://go.dev/doc/code>
 - <https://go.dev/tour/welcome/1>
 - <https://pkg.go.dev/github.com/gin-gonic/gin>
 - <https://gin-gonic.com/docs/>
+- <https://docs.docker.com/guides/golang/build-images/>
 
 ```sh
 go get .
